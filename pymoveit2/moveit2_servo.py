@@ -28,6 +28,8 @@ class MoveIt2Servo:
         angular_speed: float = 1.0,
         enable_at_init: bool = True,
         callback_group: Optional[CallbackGroup] = None,
+        servo_server_prefix: str = "/servo_server",
+        twist_pub_topic: str = "/servo_server/delta_twist_cmds",
     ):
         """
         Construct an instance of `MoveIt2Servo` interface.
@@ -45,7 +47,7 @@ class MoveIt2Servo:
         # Create publisher
         self.__twist_pub = self._node.create_publisher(
             msg_type=TwistStamped,
-            topic="delta_twist_cmds",
+            topic=twist_pub_topic,
             qos_profile=QoSProfile(
                 durability=QoSDurabilityPolicy.VOLATILE,
                 reliability=QoSReliabilityPolicy.RELIABLE,
@@ -57,12 +59,12 @@ class MoveIt2Servo:
         # Create service clients
         self.__start_service = self._node.create_client(
             srv_type=Trigger,
-            srv_name="/servo_node/start_servo",
+            srv_name=f"{servo_server_prefix}/start_servo",
             callback_group=callback_group,
         )
         self.__stop_service = self._node.create_client(
             srv_type=Trigger,
-            srv_name="/servo_node/stop_servo",
+            srv_name=f"{servo_server_prefix}/stop_servo",
             callback_group=callback_group,
         )
         self.__trigger_req = Trigger.Request()
@@ -108,6 +110,7 @@ class MoveIt2Servo:
         self,
         linear: Tuple[float, float, float] = (0.0, 0.0, 0.0),
         angular: Tuple[float, float, float] = (0.0, 0.0, 0.0),
+        frame_id: Optional[str] = None,
         enable_if_disabled: bool = True,
     ):
         """
@@ -130,6 +133,8 @@ class MoveIt2Servo:
 
         twist_msg = deepcopy(self.__twist_msg)
         twist_msg.header.stamp = self._node.get_clock().now().to_msg()
+        if frame_id is not None:
+            twist_msg.header.frame_id = frame_id
         twist_msg.twist.linear.x *= linear[0]
         twist_msg.twist.linear.y *= linear[1]
         twist_msg.twist.linear.z *= linear[2]
