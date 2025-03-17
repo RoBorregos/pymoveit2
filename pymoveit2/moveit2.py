@@ -41,8 +41,6 @@ from shape_msgs.msg import Mesh, MeshTriangle, SolidPrimitive
 from std_msgs.msg import Header, String
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
-from pymoveit2.utils import enum_to_str
-
 
 class MoveIt2State(Enum):
     """
@@ -705,7 +703,7 @@ class MoveIt2:
                     return None
             else:
                 self._node.get_logger().warn(
-                    f"Planning failed! Error code: {enum_to_str(MoveItErrorCodes, res.error_code.val)}"
+                    f"Planning failed! Error code: {res.error_code.val}."
                 )
                 return None
 
@@ -715,7 +713,7 @@ class MoveIt2:
             return res.trajectory.joint_trajectory
         else:
             self._node.get_logger().warn(
-                f"Planning failed! Error code: {enum_to_str(MoveItErrorCodes, res.error_code.val)}"
+                f"Planning failed! Error code: {res.error_code.val}."
             )
             return None
 
@@ -1320,7 +1318,7 @@ class MoveIt2:
             return res.solution.joint_state
         else:
             self._node.get_logger().warn(
-                f"IK computation failed! Error code: {enum_to_str(MoveItErrorCodes, res.error_code.val)}"
+                f"IK computation failed! Error code: {res.error_code.val}."
             )
             return None
 
@@ -2112,7 +2110,7 @@ class MoveIt2:
         self.__execution_mutex.acquire()
         if res.result().status != GoalStatus.STATUS_SUCCEEDED:
             self._node.get_logger().warn(
-                f"Action '{self.__move_action_client._action_name}' was unsuccessful: {enum_to_str(GoalStatus,res.result().status)}."
+                f"Action '{self.__move_action_client._action_name}' was unsuccessful: {res.result().status}."
             )
             self.motion_suceeded = False
         else:
@@ -2178,7 +2176,7 @@ class MoveIt2:
         self.__execution_mutex.acquire()
         if res.result().status != GoalStatus.STATUS_SUCCEEDED:
             self._node.get_logger().warn(
-                f"Action '{self._execute_trajectory_action_client._action_name}' was unsuccessful: {enum_to_str(GoalStatus,res.result().status)}."
+                f"Action '{self._execute_trajectory_action_client._action_name}' was unsuccessful: {res.result().status}."
             )
             self.motion_suceeded = False
         else:
@@ -2276,6 +2274,16 @@ class MoveIt2:
         # self.__compute_ik_req.ik_request.timeout.sec = "Ignored"
         # self.__compute_ik_req.ik_request.timeout.nanosec = "Ignored"
 
+    def get_planning_scene(self) -> Optional[PlanningScene]:
+        """
+        Get the current planning scene.
+        """
+
+        if not self.update_planning_scene():
+            return None
+        
+        return self.__planning_scene
+    
     @property
     def planning_scene(self) -> Optional[PlanningScene]:
         return self.__planning_scene
